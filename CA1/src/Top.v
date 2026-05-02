@@ -104,7 +104,7 @@ module Top(
     );
 
     wire [31:0] PC_WB;
-    ID_stage_reg MEM_reg (
+    MEM_stage_reg MEM_reg (
         .clk(clk),
         .rst(rst),
         .PC_in(PC_MEM),

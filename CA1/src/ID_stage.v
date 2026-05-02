@@ -18,10 +18,12 @@ module ID_stage (
     output [31:0] Operand2,
     output B,
     output S,
-    output [31:0] signed_imm_24,
+    output [23:0] signed_imm_24,   
     output [3:0] src1,
     output [3:0] src2,
-    output Two_src
+    output imm,   
+    output Two_src,
+    output [11:0] shift_operand
 );
 
     wire [3:0] cond   = Instruction[31:28];
@@ -35,13 +37,14 @@ module ID_stage (
     wire [3:0] Rm     = Instruction[3:0];
 
     assign PC = PC_in;
-    assign signed_imm_24 = {{24{Instruction[23]}}, Instruction[23:0]};
+    assign signed_imm_24 = Instruction[23:0];   
+
 
     wire uncond_MEM_R_EN, uncond_MEM_W_EN, uncond_WB_EN;
     wire [3:0] src2_pre = (uncond_MEM_W_EN) ? Rd : Rm;
     assign src1 = Rn;
     assign src2 = src2_pre;
-    assign Two_src = 1'b0;
+    assign Two_src = ~(uncond_MEM_R_EN | imm);
 
     wire [3:0] uncond_EXE_CMD;
     wire uncond_Imm, uncond_B, uncond_S_update;
@@ -97,7 +100,8 @@ module ID_stage (
     );
 
     assign Operand2 = is_imm_operand ? shifted_val : Val_Rm;
-
+    assign imm = is_imm_operand;                
     assign Dest = Rd;
+    assign shift_operand = shifter;   
 
 endmodule

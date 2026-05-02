@@ -6,12 +6,12 @@ module control_unit (
     output reg MEM_R_EN,
     output reg MEM_W_EN,
     output reg WB_EN,
-    output reg Imm,
-    output reg B,
-    output reg S_update
+    output reg Imm,          // indicates immediate operand (for operand 2 selection)
+    output reg B,            // branch instruction flag
+    output reg S_update      // update status flags
 );
 
-    
+    // ALU micro-operation encodings (from Table 5)
     localparam
         CMD_MOV = 4'b0001,
         CMD_MVN = 4'b1001,
@@ -25,7 +25,7 @@ module control_unit (
         CMD_NOP = 4'b0000;
 
     always @(*) begin
-        
+        // Default values
         EXE_CMD   = CMD_NOP;
         MEM_R_EN  = 1'b0;
         MEM_W_EN  = 1'b0;
@@ -35,11 +35,11 @@ module control_unit (
         S_update  = 1'b0;
 
         case (Mode)
-            2'b00: begin 
+            2'b00: begin // Data processing
                 if (OpCode == 4'b1101) begin // MOV
                     EXE_CMD = CMD_MOV;
                     WB_EN   = 1'b1;
-                    Imm     = 1'b1;
+                    Imm     = 1'b1;   // always immediate
                 end
                 else if (OpCode == 4'b1111) begin // MVN
                     EXE_CMD = CMD_MVN;
@@ -49,7 +49,7 @@ module control_unit (
                 else if (OpCode == 4'b0100) begin // ADD
                     EXE_CMD = CMD_ADD;
                     WB_EN   = 1'b1;
-                    Imm     = 1'b0;
+                    Imm     = 1'b0;   // actual immediateness determined by I bit
                     S_update = S;
                 end
                 else if (OpCode == 4'b0101) begin // ADC
@@ -89,25 +89,25 @@ module control_unit (
                     S_update = S;
                 end
                 else if (OpCode == 4'b1010) begin // CMP
-                    EXE_CMD  = CMD_SUB;
+                    EXE_CMD  = CMD_SUB;   // subtraction without writeback
                     WB_EN    = 1'b0;
                     Imm      = 1'b0;
                     S_update = 1'b1;
                 end
                 else if (OpCode == 4'b1000) begin // TST
-                    EXE_CMD  = CMD_AND;
+                    EXE_CMD  = CMD_AND;   // AND without writeback
                     WB_EN    = 1'b0;
                     Imm      = 1'b0;
                     S_update = 1'b1;
                 end
             end
 
-            2'b01: begin 
-                EXE_CMD = CMD_ADD;  
-                if (S == 1'b1) begin // LDR
+            2'b01: begin // Memory (LDR/STR)
+                EXE_CMD = CMD_ADD;   // address calculation: Rn + offset
+                if (S == 1'b1) begin // LDR (S bit distinguishes LDR from STR in our encoding)
                     MEM_R_EN = 1'b1;
                     WB_EN    = 1'b1;
-                    Imm      = 1'b1;
+                    Imm      = 1'b1; // offset is immediate
                 end else begin // STR
                     MEM_W_EN = 1'b1;
                     WB_EN    = 1'b0;
@@ -115,7 +115,7 @@ module control_unit (
                 end
             end
 
-            2'b10: begin 
+            2'b10: begin // Branch
                 B = 1'b1;
             end
 
