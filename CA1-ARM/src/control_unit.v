@@ -1,18 +1,18 @@
 module control_unit (
-    input [1:0] Mode,
-    input [3:0] OpCode,
-    input S,
+    input      [1:0] Mode,
+    input      [3:0] OpCode,
+    input            S,
     output reg [3:0] EXE_CMD,
-    output reg MEM_R_EN,
-    output reg MEM_W_EN,
-    output reg WB_EN,
-    output reg Imm,          // indicates immediate operand (for operand 2 selection)
-    output reg B,            // branch instruction flag
-    output reg S_update      // update status flags
+    output reg       MEM_R_EN,
+    output reg       MEM_W_EN,
+    output reg       WB_EN,
+    output reg       Imm,       // indicates immediate operand (for operand 2 selection)
+    output reg       B,         // branch instruction flag
+    output reg       S_update   // update status flags
 );
 
-    // ALU micro-operation encodings (from Table 5)
-    localparam
+  // ALU micro-operation encodings (from Table 5)
+  localparam
         CMD_MOV = 4'b0001,
         CMD_MVN = 4'b1001,
         CMD_ADD = 4'b0010,
@@ -24,103 +24,93 @@ module control_unit (
         CMD_EOR = 4'b1000,
         CMD_NOP = 4'b0000;
 
-    always @(*) begin
-        // Default values
-        EXE_CMD   = CMD_NOP;
-        MEM_R_EN  = 1'b0;
-        MEM_W_EN  = 1'b0;
-        WB_EN     = 1'b0;
-        Imm       = 1'b0;
-        B         = 1'b0;
-        S_update  = 1'b0;
+  always @(*) begin
+    // Default values
+    EXE_CMD  = CMD_NOP;
+    MEM_R_EN = 1'b0;
+    MEM_W_EN = 1'b0;
+    WB_EN    = 1'b0;
+    Imm      = 1'b0;
+    B        = 1'b0;
+    S_update = 1'b0;
 
-        case (Mode)
-            2'b00: begin // Data processing
-                if (OpCode == 4'b1101) begin // MOV
-                    EXE_CMD = CMD_MOV;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b1;   // always immediate
-                end
-                else if (OpCode == 4'b1111) begin // MVN
-                    EXE_CMD = CMD_MVN;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b1;
-                end
-                else if (OpCode == 4'b0100) begin // ADD
-                    EXE_CMD = CMD_ADD;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b0;   // actual immediateness determined by I bit
-                    S_update = S;
-                end
-                else if (OpCode == 4'b0101) begin // ADC
-                    EXE_CMD = CMD_ADC;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b0;
-                    S_update = S;
-                end
-                else if (OpCode == 4'b0010) begin // SUB
-                    EXE_CMD = CMD_SUB;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b0;
-                    S_update = S;
-                end
-                else if (OpCode == 4'b0110) begin // SBC
-                    EXE_CMD = CMD_SBC;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b0;
-                    S_update = S;
-                end
-                else if (OpCode == 4'b0000) begin // AND
-                    EXE_CMD = CMD_AND;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b0;
-                    S_update = S;
-                end
-                else if (OpCode == 4'b1100) begin // ORR
-                    EXE_CMD = CMD_ORR;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b0;
-                    S_update = S;
-                end
-                else if (OpCode == 4'b0001) begin // EOR
-                    EXE_CMD = CMD_EOR;
-                    WB_EN   = 1'b1;
-                    Imm     = 1'b0;
-                    S_update = S;
-                end
-                else if (OpCode == 4'b1010) begin // CMP
-                    EXE_CMD  = CMD_SUB;   // subtraction without writeback
-                    WB_EN    = 1'b0;
-                    Imm      = 1'b0;
-                    S_update = 1'b1;
-                end
-                else if (OpCode == 4'b1000) begin // TST
-                    EXE_CMD  = CMD_AND;   // AND without writeback
-                    WB_EN    = 1'b0;
-                    Imm      = 1'b0;
-                    S_update = 1'b1;
-                end
-            end
+    case (Mode)
+      2'b00: begin  // Data processing
+        if (OpCode == 4'b1101) begin  // MOV
+          EXE_CMD = CMD_MOV;
+          WB_EN   = 1'b1;
+          Imm     = 1'b1;  // always immediate
+        end else if (OpCode == 4'b1111) begin  // MVN
+          EXE_CMD = CMD_MVN;
+          WB_EN   = 1'b1;
+          Imm     = 1'b1;
+        end else if (OpCode == 4'b0100) begin  // ADD
+          EXE_CMD  = CMD_ADD;
+          WB_EN    = 1'b1;
+          Imm      = 1'b0;  // actual immediateness determined by I bit
+          S_update = S;
+        end else if (OpCode == 4'b0101) begin  // ADC
+          EXE_CMD  = CMD_ADC;
+          WB_EN    = 1'b1;
+          Imm      = 1'b0;
+          S_update = S;
+        end else if (OpCode == 4'b0010) begin  // SUB
+          EXE_CMD  = CMD_SUB;
+          WB_EN    = 1'b1;
+          Imm      = 1'b0;
+          S_update = S;
+        end else if (OpCode == 4'b0110) begin  // SBC
+          EXE_CMD  = CMD_SBC;
+          WB_EN    = 1'b1;
+          Imm      = 1'b0;
+          S_update = S;
+        end else if (OpCode == 4'b0000) begin  // AND
+          EXE_CMD  = CMD_AND;
+          WB_EN    = 1'b1;
+          Imm      = 1'b0;
+          S_update = S;
+        end else if (OpCode == 4'b1100) begin  // ORR
+          EXE_CMD  = CMD_ORR;
+          WB_EN    = 1'b1;
+          Imm      = 1'b0;
+          S_update = S;
+        end else if (OpCode == 4'b0001) begin  // EOR
+          EXE_CMD  = CMD_EOR;
+          WB_EN    = 1'b1;
+          Imm      = 1'b0;
+          S_update = S;
+        end else if (OpCode == 4'b1010) begin  // CMP
+          EXE_CMD  = CMD_SUB;  // subtraction without writeback
+          WB_EN    = 1'b0;
+          Imm      = 1'b0;
+          S_update = 1'b1;
+        end else if (OpCode == 4'b1000) begin  // TST
+          EXE_CMD  = CMD_AND;  // AND without writeback
+          WB_EN    = 1'b0;
+          Imm      = 1'b0;
+          S_update = 1'b1;
+        end
+      end
 
-            2'b01: begin // Memory (LDR/STR)
-                EXE_CMD = CMD_ADD;   // address calculation: Rn + offset
-                if (S == 1'b1) begin // LDR (S bit distinguishes LDR from STR in our encoding)
-                    MEM_R_EN = 1'b1;
-                    WB_EN    = 1'b1;
-                    Imm      = 1'b1; // offset is immediate
-                end else begin // STR
-                    MEM_W_EN = 1'b1;
-                    WB_EN    = 1'b0;
-                    Imm      = 1'b1;
-                end
-            end
+      2'b01: begin  // Memory (LDR/STR)
+        EXE_CMD = CMD_ADD;  // address calculation: Rn + offset
+        if (S == 1'b1) begin  // LDR (S bit distinguishes LDR from STR in our encoding)
+          MEM_R_EN = 1'b1;
+          WB_EN    = 1'b1;
+          Imm      = 1'b1;  // offset is immediate
+        end else begin  // STR
+          MEM_W_EN = 1'b1;
+          WB_EN    = 1'b0;
+          Imm      = 1'b1;
+        end
+      end
 
-            2'b10: begin // Branch
-                B = 1'b1;
-            end
+      2'b10: begin  // Branch
+        B = 1'b1;
+      end
 
-            default: ;
-        endcase
-    end
+      default: ;
+    endcase
+  end
 
 endmodule
