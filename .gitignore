@@ -2,4 +2,7 @@
 *.mpf
 *.wlf
 work/
-
+transcript
+*.vcd
+*.log
+*.vvp

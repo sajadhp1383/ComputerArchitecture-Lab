@@ -5,7 +5,7 @@ module condition_check (
 );
 
   wire N, Z, C, V;
-  assign {N, Z, C, V} = SR;
+  assign {Z, C, N, V} = SR;
 
   always @(*) begin
     case (cond)
