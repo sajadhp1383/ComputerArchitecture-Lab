@@ -15,7 +15,7 @@ module Topmodule_tb;
     rst = 1;
     #10 rst = 0;
     clk = 0;
-    #400;
+    #5000;
     $stop;
   end
 

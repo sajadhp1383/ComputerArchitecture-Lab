@@ -1,6 +1,7 @@
 module ID_stage (
     input clk,
     input rst,
+    input hazard,
     input [31:0] PC_in,
     input [31:0] Instruction,
     input [3:0] SR,
@@ -19,7 +20,10 @@ module ID_stage (
     output S,
     output [23:0] signed_imm_24,
     output imm,
-    output [11:0] shift_operand
+    output [11:0] shift_operand,
+    output Two_src,
+    output [3:0] src1,
+    output [3:0] src2
 );
 
   wire [ 3:0] cond = Instruction[31:28];
@@ -38,11 +42,9 @@ module ID_stage (
 
   wire uncond_MEM_R_EN, uncond_MEM_W_EN, uncond_WB_EN;
   wire [3:0] src2_pre = (uncond_MEM_W_EN) ? Rd : Rm;
-  wire [3:0] src1, src2;
-  wire Two_src;
   assign  src1 = Rn;
   assign src2 = src2_pre;
-  assign Two_src = ~(uncond_MEM_R_EN | imm);
+  assign Two_src = (~imm) | uncond_MEM_W_EN;
 
   wire [3:0] uncond_EXE_CMD;
   wire uncond_Imm, uncond_B, uncond_S_update;
@@ -67,12 +69,14 @@ module ID_stage (
       .Cond(Cond)
   );
 
-  assign EXE_CMD  = Cond ? uncond_EXE_CMD : 4'b0000;
-  assign MEM_R_EN = Cond ? uncond_MEM_R_EN : 1'b0;
-  assign MEM_W_EN = Cond ? uncond_MEM_W_EN : 1'b0;
-  assign WB_EN    = Cond ? uncond_WB_EN : 1'b0;
-  assign B        = Cond ? uncond_B : 1'b0;
-  assign S        = Cond ? uncond_S_update : 1'b0;
+wire final_enable = Cond & (~hazard); 
+
+  assign EXE_CMD  = final_enable ? uncond_EXE_CMD : 4'b0000;
+  assign MEM_R_EN = final_enable ? uncond_MEM_R_EN : 1'b0;
+  assign MEM_W_EN = final_enable ? uncond_MEM_W_EN : 1'b0;
+  assign WB_EN    = final_enable ? uncond_WB_EN : 1'b0;
+  assign B        = final_enable ? uncond_B : 1'b0;
+  assign S        = final_enable ? uncond_S_update : 1'b0;
 
   RegisterFile RF (
       .clk(clk),

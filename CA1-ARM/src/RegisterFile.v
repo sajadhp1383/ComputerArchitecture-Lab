@@ -20,7 +20,7 @@ module RegisterFile (
   assign Val_Rm = regs[Rm];
 
 
-  always @(posedge clk) begin
+  always @(negedge clk) begin
     if (WB_EN) regs[Dest] <= WriteData;
   end
 

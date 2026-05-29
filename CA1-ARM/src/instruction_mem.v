@@ -6,7 +6,7 @@ module instruction_mem (
   reg [31:0] mem[0:2047];
 
   initial begin
-    $readmemb("instruction_mem.mem", mem);
+    $readmemb("E:/UT/6/ComputerArchitecture-Lab/CA1-ARM/src/instruction_mem.mem", mem);
   end
 
   assign instruction = mem[addr];

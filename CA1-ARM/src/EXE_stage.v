@@ -22,7 +22,7 @@ module EXE_stage (
   assign val_rm_out = val_rm;
   assign mem_access = mem_r_en_in | mem_w_en_in;
   wire [31:0] sign_extended_imm24 = {{8{signed_imm_24[23]}}, signed_imm_24};
-  assign branch_address = pc_in + sign_extended_imm24;
+  assign branch_address = pc_in + 32'd1 + sign_extended_imm24;
   Val2Generator val2_gen (
       .val_rm(val_rm),
       .shift_operand(shift_operand),
