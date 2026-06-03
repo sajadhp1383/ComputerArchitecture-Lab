@@ -10,7 +10,6 @@ module data_mem (
     reg [31:0] memory [0:1023];
 
     wire [9:0] addr = address[9:0];
-// wire [9:0] addr = address[11:2];
 
     assign read_data = MEM_R_EN ? memory[addr] : 32'b0;
 

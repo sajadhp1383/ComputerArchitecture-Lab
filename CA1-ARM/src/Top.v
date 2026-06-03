@@ -1,15 +1,14 @@
 module Top (
     input clk,
-    input rst
+    input rst,
+    input Forwarding_EN
 );
 
-  // ========================== IF Stage ==========================
   wire [31:0] PC_IF, Instruction_IF;
   wire [31:0] Branch_Address;
   wire B_EXE;
-  
-  // تعریف سیم هازارد این بالا قرار گرفت تا قبل از IF_stage شناخته شود
-  wire Hazard_Detected_wire; 
+
+  wire Hazard_Detected_wire;
   wire true_hazard = Hazard_Detected_wire & (~B_EXE);
 
   IF_stage IF_stage_inst (
@@ -26,23 +25,21 @@ module Top (
   IF_stage_reg IF_reg (
       .clk(clk),
       .rst(rst),
-      .freeze(true_hazard), 
+      .freeze(true_hazard),
       .flush(B_EXE),
       .PC_in(PC_IF),
       .Instruction_in(Instruction_IF),
       .PC(PC_ID),
       .Instruction(Instruction_ID)
   );
-
-  // ========================== ID Stage ==========================
   wire [31:0] PC_ID_out, Val_Rn_ID, Val_Rm_ID;
   wire [23:0] signed_imm_24_ID;
-  wire [3:0]  EXE_CMD_ID, Dest_ID, src1_ID, src2_ID;
+  wire [3:0] EXE_CMD_ID, Dest_ID, src1_ID, src2_ID;
   wire MEM_R_EN_ID, MEM_W_EN_ID, WB_EN_ID, B_ID, S_ID, Two_src_ID;
   wire [11:0] shift_operand_ID;
   wire        imm_ID;
   wire [ 3:0] SR;
-  
+
   wire        WB_EN_WB;
   wire [ 3:0] Dest_WB;
   wire [31:0] WB_WB_Value;
@@ -77,12 +74,14 @@ module Top (
 
   wire [31:0] PC_EXE, Val_Rn_EXE, Val_Rm_EXE;
   wire [23:0] signed_imm_24_EXE;
-  wire [3:0]  EXE_CMD_EXE, Dest_EXE; 
+  wire [3:0] EXE_CMD_EXE, Dest_EXE;
   wire MEM_R_EN_EXE, MEM_W_EN_EXE, WB_EN_EXE, S_EXE;
   wire [11:0] shift_operand_EXE;
   wire c_out;
   wire imm_EXE;
-  
+
+  wire [3:0] src1_EXE, src2_EXE;
+
   ID_stage_reg ID_reg (
       .clk(clk),
       .rst(rst),
@@ -100,7 +99,9 @@ module Top (
       .imm_in(imm_ID),
       .c_in(SR[2]),
       .signed_imm_24_in(signed_imm_24_ID),
-      
+      .src1_in(src1_ID),
+      .src2_in(src2_ID),
+
       .PC(PC_EXE),
       .EXE_CMD(EXE_CMD_EXE),
       .MEM_R_EN(MEM_R_EN_EXE),
@@ -114,18 +115,30 @@ module Top (
       .signed_imm_24(signed_imm_24_EXE),
       .shift_operand(shift_operand_EXE),
       .imm(imm_EXE),
-      .c_out(c_out)
+      .c_out(c_out),
+      .src1_out(src1_EXE),
+      .src2_out(src2_EXE)
   );
-
-  // تعریف سیم‌های مربوط به MEM این بالا قرار گرفت تا واحد هازارد آن‌ها را بشناسد
   wire WB_EN_MEM;
   wire MEM_R_EN_MEM;
   wire MEM_W_EN_MEM;
   wire [31:0] ALU_result_MEM;
   wire [31:0] Val_Rm_MEM;
   wire [3:0] Dest_MEM;
+  wire [1:0] sel_src1_wire, sel_src2_wire;
 
-  // ========================== Hazard Detection Unit ==========================
+  Forwarding_Unit FU (
+      .Forwarding_EN(Forwarding_EN),
+      .src1(src1_EXE),
+      .src2(src2_EXE),
+      .mem_wb_en(WB_EN_MEM),
+      .mem_dest(Dest_MEM),
+      .wb_wb_en(WB_EN_WB),
+      .wb_dest(Dest_WB),
+      .sel_src1(sel_src1_wire),
+      .sel_src2(sel_src2_wire)
+  );
+
   Hazard_Detection_Unit HDU (
       .src1(src1_ID),
       .src2(src2_ID),
@@ -134,10 +147,13 @@ module Top (
       .EXE_WB_EN(WB_EN_EXE),
       .MEM_WB_EN(WB_EN_MEM),
       .Two_src(Two_src_ID),
+
+      .Forwarding_EN(Forwarding_EN),
+      .EXE_MEM_R_EN (MEM_R_EN_EXE),
+
       .Hazard_Detected(Hazard_Detected_wire)
   );
 
-  // ========================== EXE Stage ==========================
   wire [3:0] status_bits_exe;
   StatusRegister SR_inst (
       .clk(clk),
@@ -148,7 +164,7 @@ module Top (
   );
   wire [31:0] alu_result_exe;
   wire [31:0] val_rm_exe_out;
-  
+
   EXE_stage EXE_stage_inst (
       .exe_cmd(EXE_CMD_EXE),
       .s_update(S_EXE),
@@ -161,10 +177,16 @@ module Top (
       .val_rm(Val_Rm_EXE),
       .shift_operand(shift_operand_EXE),
       .signed_imm_24(signed_imm_24_EXE),
-      .sr_status_bits_in(SR), 
+      .sr_status_bits_in(SR),
+
+      .sel_src1(sel_src1_wire),
+      .sel_src2(sel_src2_wire),
+      .alu_res_mem(ALU_result_MEM),
+      .wb_res(WB_WB_Value),
+
       .alu_result(alu_result_exe),
       .val_rm_out(val_rm_exe_out),
-      .branch_address(Branch_Address), // متصل به رجیستر IF
+      .branch_address(Branch_Address),
       .status_bits_out(status_bits_exe)
   );
 
@@ -185,9 +207,8 @@ module Top (
       .dest_out(Dest_MEM)
   );
 
-  // ========================== MEM Stage ==========================
   wire [31:0] data_mem_out_MEM;
-  
+
   MEM_stage MEM_stage_inst (
       .clk(clk),
       .MEM_R_EN(MEM_R_EN_MEM),
@@ -201,7 +222,6 @@ module Top (
   wire [31:0] ALU_result_WB;
   wire [31:0] data_mem_out_WB;
 
-  // استفاده از رجیستر میانی آپدیت‌شده‌ی بین MEM و WB
   MEM_stage_reg MEM_reg (
       .clk(clk),
       .rst(rst),
@@ -210,7 +230,7 @@ module Top (
       .alu_result_in(ALU_result_MEM),
       .data_mem_in(data_mem_out_MEM),
       .dest_in(Dest_MEM),
-      
+
       .wb_en_out(WB_EN_WB),
       .mem_r_en_out(MEM_R_EN_WB),
       .alu_result_out(ALU_result_WB),
@@ -218,7 +238,6 @@ module Top (
       .dest_out(Dest_WB)
   );
 
-  // ========================== WB Stage ==========================
   WB_stage WB_stage_inst (
       .MEM_R_EN(MEM_R_EN_WB),
       .ALU_res(ALU_result_WB),
