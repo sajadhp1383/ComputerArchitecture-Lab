@@ -1,10 +1,33 @@
+# ModelSim / QuestaSim Simulation Artifacts
 *.mti
 *.mpf
 *.wlf
 work/
+sim/work/
 transcript
+sim/transcript
+sim/vsim.wlf
+sim/instruction_mem.mem
+modelsim.ini
+
+# Waveform, Log, and Dump Files
 *.vcd
+*.fsdb
 *.log
 *.vvp
+vsim_stacktrace.vstf
+
+# Archives and Backups
 *.zip
 *.rar
+*.7z
+*.bak
+*.orig
+
+# OS and Editor Files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.vscode/

@@ -8,7 +8,7 @@ module IF_stage (
     Instruction
 );
   instruction_mem IF_memory (
-      .addr(PC),
+      .addr(PC[10:0]),
       .instruction(Instruction)
   );
   wire [31:0] PCNext, PCPlus1;

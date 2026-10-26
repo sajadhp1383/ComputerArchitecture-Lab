@@ -1,4 +1,6 @@
-module instruction_mem (
+module instruction_mem #(
+    parameter MEM_FILE = "instruction_mem.mem"
+) (
     input  [10:0] addr,
     output [31:0] instruction
 );
@@ -6,7 +8,7 @@ module instruction_mem (
   reg [31:0] mem[0:2047];
 
   initial begin
-    $readmemb("./instruction_mem.mem", mem);
+    $readmemb(MEM_FILE, mem);
   end
 
   assign instruction = mem[addr];

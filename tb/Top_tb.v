@@ -1,6 +1,6 @@
 `timescale 1ns / 1ns
 
-module Topmodule_tb;
+module Top_tb;
   reg clk;
   reg rst;
   reg Forwarding_EN;
@@ -14,7 +14,6 @@ module Topmodule_tb;
   always #5 clk = ~clk;
 
   initial begin
-
     clk = 0;
     rst = 1;
 
@@ -40,3 +39,9 @@ module Topmodule_tb;
   end
 
 endmodule
+
+// Backward-compatibility wrapper for legacy simulation workflows:
+module Topmodule_tb;
+  Top_tb tb_inst ();
+endmodule
+
