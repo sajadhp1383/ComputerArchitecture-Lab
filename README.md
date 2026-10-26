@@ -70,6 +70,7 @@ The processor follows the classic 5-stage RISC pipeline:
 ```
 ComputerArchitecture-Lab/
 |-- docs/                      # Reference manuals, design session slides, diagrams
+|   |-- Final_Report.pdf       # Comprehensive final project report
 |-- scripts/                   # Utility maintenance scripts
 |   `-- clean.bat              # Cleans ModelSim build artifacts and logs
 |-- sim/                       # Simulation automation
